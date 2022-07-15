@@ -1,0 +1,372 @@
+---
+title: "YTHDF2 grapgh"
+output:
+  html_document:
+    code_folding: hide
+    collapsed: no
+    df_print: paged
+    number_sections: no
+    theme: paper
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+  html_notebook:
+    toc: yes
+    toc_depth: 5
+editor_options: 
+  chunk_output_type: inline
+author: "Marisol Mendoza"
+date: "7.15.22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align="center", fig.width=6, fig.height=6)
+library(tidyverse)
+```
+
+## R Markdown
+
+This is an R Markdown document. This is Markdown but inside R Studio. R Markdown documents contain both written text and code chunks.
+
+A chunk of code is highlighted in grey. To execute a code chunk click on the green play button on the right of the chunk:
+```{r}
+print("Hello!")
+```
+
+## Importing gene expression data into R
+
+First, we will check which folder we are in:
+```{r}
+getwd()
+```
+
+We can use the File Explorer on the side bar to change the working directory. Click on Files and navigate to the Desktop. Then click More and Set as working directory.
+
+> Challenge: Check again your working directory [Hint: you can use getwd()]. What is your current working directory?
+
+desktop
+
+First, we will use the function `read.table()` to read the information inside R. Add the file name to this function:
+
+
+```{r}
+data <- read.table("gene_tpm.tsv", header=TRUE, sep="\t")
+```
+
+Let's explore the data using the function View():
+```{r, eval = FALSE}
+View(data)
+```
+
+Then, we will select the expression data of the gene of interest by subsetting the data. 
+
+Type the name of your gene and then execute the following code chunk:
+```{r}
+geneName <- "YTHDF2"
+
+data2 <- data[data$Gene == geneName,]
+```
+
+> Challenge: What did the above chunk do?
+
+Let's look the new dataset:
+```{r, eval = FALSE}
+View(data2 )
+```
+
+Finally, We can count the number of rows and columns using `dim()`:
+```{r}
+dim(data2 )
+```
+
+
+Alternatively, we can see a summary of each column using `str()`:
+
+```{r}
+str(data2 )
+```
+
+> Challenge: How many samples are in this dataset? Hint: There is one sample per row.
+17382
+
+
+## Plotting in Base R
+
+Lets try plotting our data using base r. We will begin my creating a boxplot for a single tissue using the `boxplot()` function. 
+
+To do this we need to add another filer to our data so only a single tissue is present. Try filtering the data in a similar matter to how we did it above:
+
+```{r}
+tissueName <- "Brain"
+tissue_data2 <- data2[data2$SMTS == tissueName,]
+```
+
+Now that we have data for a specific tissue let's plot. Paste in the column name of your tissue specific data below:
+
+```{r}
+boxplot(tissue_data2$TPM)
+```
+
+
+>Challenge: What is the median (middle line) for this tissue?
+
+This initial boxplot is good, but we can see it would take alot of effort to repeat this for each and every tissue.
+
+Let's repeat, but this time we will plot every tissue instead of just one at a time. We can again use the `boxplot()` function but with a few tweaks.
+
+Here, y is a numeric variable and grp is the variable grouping your sample. We want expression level to be our numeric and tissue type to be our grouping variable. **Hint**: Think about what columns we need from our data.
+
+```
+boxplot(y~grp, data = data2 )
+```
+
+```{r}
+boxplot(TPM~SMTSD, data = data2)
+```
+
+
+Let's change the x and y axis labels so they can be better understood.
+Fill in the axis labels below:
+
+```{r}
+boxplot(TPM~SMTSD, data = data2, xlab = "tissue", ylab = "transcript per million")
+```
+
+
+
+> Challenge: What tissue or tissues does your gene seem to be most expressed in?
+Cells-Cultured fibroblasts
+> Challenge: What would you change about this plot?
+I would add color and more exactly labeling
+## Installing and loading a Package
+
+Let's install a package known as ggplot2
+
+
+**R Packages**: collection of R functions that can loaded in to your R session. This allows us to use functions not available in base R. One such package is known as `ggplot2`. Ggplot2 is package that allows for the creation of elequent and detailed graphs.
+
+We first need to download the package using `install.packages()`. Simply enter the package name (`ggplot2`) below:
+
+```{r, eval = FALSE}
+install.packages("ggplot2")
+```
+
+Now that we have installed the packaged let's load it into our session using `library()`. Enter the package name below:
+
+```{r}
+library(ggplot2)
+```
+
+## Plotting in `ggplot2`
+
+GGplot works by adding many `layers` to a base plot. Let's create our base plot below. We need to supply ggplot2 with the name of our `dataframe`, the column containing the `x values`, and the column containing the `y values`:
+
+```{r}
+GTEX_boxplot = ggplot(data =data2 ,
+			 mapping = aes(x = SMTSD ,
+			 							 y =TPM ))
+GTEX_boxplot
+```
+
+Kinda boring
+
+Let's add our first layer. layers in ggplot our added with a `+`. Let's tell ggplot2 that we are going to be generating a boxplot. This is done using by adding `geom_boxplot` to our existing plot. Try this below:
+
+```{r}
+GTEX_boxplot = GTEX_boxplot +  
+	geom_boxplot()
+GTEX_boxplot
+```
+
+Let's change X and y axis labels again. These layers are known as `xlab("x axis name")` and `ylab( "y axis name)`. Try adding these layers below:
+
+```{r}
+GTEX_boxplot = GTEX_boxplot  + 
+	xlab("tissue") +
+	ylab("TPM")
+GTEX_boxplot
+```
+
+Let's add a title. This layer is `ggtitle()` and works in a similar manner to `xlab()` and `ylab()`.
+
+```{r}
+GTEX_boxplot = GTEX_boxplot  + 
+	ggtitle("Gene expression data for YTHDF2")
+GTEX_boxplot
+```
+
+Let's rotate x axis labels. (This one is more complex so just add this layer) `theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))`
+
+```{r}
+GTEX_boxplot = GTEX_boxplot  + 
+	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+GTEX_boxplot
+```
+
+> Challenge: what tissue is your gene most expressed in?
+The gene is mostly expressed in the cells-cultured fibroblasts
+Now our ggplot is starting to take shape
+
+Let's add some color by changing our `geom_boxplot` layer. Try adjusting the fill and the border color like so:
+
+`geom_boxplot(fill = "color", col = "color")`
+
+```{r}
+GTEX_boxplot = GTEX_boxplot +
+	geom_boxplot(fill = "beige", col = "pink")
+GTEX_boxplot
+```
+Feel free to change multiple times!
+
+Now let's change the color so that each tissue has a distinct color. This is a slightly more complicated step. We need to tell ggplot which column to color our data by. Let's try coloring data by the general tissue type like so: `geom_boxplot(aes(col = {column to color by} ))`
+
+```{r, fig.width=11, fig.height=11}
+GTEX_boxplot = GTEX_boxplot +
+	geom_boxplot(aes(col = SMTS)) 
+GTEX_boxplot
+```
+
+Lets see all our code together:
+```{r, eval = F}
+GTEX_boxplot = ggplot(data = data2,
+			 mapping = aes(x = SMTSD, y = TPM, col = SMTS)) +
+	geom_boxplot()  + 
+	xlab("Tissue") +
+	ylab("Transcripts per Million") + 
+	ggtitle("Expression Data") + 
+	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+GTEX_boxplot
+```
+
+What makes ggplot so special is the fact that every single plot will have the same basic syntax. It is very easy to create an entirely new plot with minimal changes to your code. This is the beauty of ggplot
+
+
+One Final touch...let's load in a custom theme from the package `ggthemes`. Themes represent saved ggplot aesthetics that can be added to your plot
+
+```{r, eval = FALSE}
+install.packages("ggthemes")
+```
+
+Load in the package
+```{r}
+library(ggthemes)
+```
+
+
+Adding the theme to our data:
+
+```{r, fig.width=11, fig.height=11}
+GTEX_boxplot = ggplot(data = data2,
+			 mapping = aes(x = SMTSD, y = TPM)) +
+	geom_boxplot(aes(col = SMTS))  + 
+	xlab("Tissue") +
+	ylab("Transcripts per Million") + 
+	ggtitle("Expression Data") + 
+	theme_stata() +
+	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+				legend.title = element_blank()) 
+	
+
+GTEX_boxplot
+```
+
+Original Base R Plot:
+
+```{r}
+boxplot(TPM~SMTS, data = data2, xlab = "Tissue", ylab = "Transcript Per Million")
+```
+
+
+>Challenge: Compare your ggplot to your base R plot. What are the advantages and disadvantages of using ggplot as opposed to plotting in base R?
+an advantage of using ggplot is it to makes the grapgh pretty.It allows you to add color and labels easier.Another advantage of using ggplot its stacking, you can go back and look to see all your progress as you go.Using base R is fast and stable but it doesn't allow you to add color and label as easy.  
+## Gene Expression Anatogram
+
+Run the next two chunks to install and load `gganatogram`. `gganatogram` is a package that offers a new way of visualizing expression data by tissue.
+```{r,eval=FALSE}
+source("https://neuroconductor.org/neurocLite.R")
+
+# Default Install
+neuro_install('gganatogram')
+```
+
+```{r}
+library(gganatogram)
+
+annatogram = function(data, organism, sex, label, title){
+	gganatogram(data=data,
+								 fillOutline="gray",
+								 organism="human",
+								 sex = sex,
+								 fill="value") +
+	                theme_void() +
+	coord_fixed() +
+scale_fill_distiller(palette = "Spectral", direction=1) + labs(fill = label) +
+	ggtitle(title) 
+}
+```
+
+Run this chunk to create a new dataset that can be input into `gganatogram`. This creates two new dataset `male_annatogram_data` and `female_annatogram_data` (Don't worry about the specifics of the code here)
+```{r}
+male_annatogram_data = data2 %>%
+	group_by(SMTS) %>%
+	summarise(avg = mean(TPM)) %>%
+	rename(organ = SMTS) %>%
+	mutate(organ = tolower(organ),
+				 organ = str_replace(organ," ","_"),
+				 organ = case_when(
+				 	organ == "bladder" ~ "urinary_bladder",
+				 	organ == "pituitary" ~ "pituitary_gland",
+				 	organ == "thyroid" ~ "thyroid_gland",
+				 	TRUE ~ as.character(organ)
+				 )) %>%
+		right_join(hgMale_key, "organ") %>% na.omit() %>% select(organ,type, colour, avg) %>%
+	rename(value = avg)
+
+female_annatogram_data = data2 %>%
+	group_by(SMTS) %>%
+	summarise(avg = mean(TPM)) %>%
+	rename(organ = SMTS) %>%
+	mutate(organ = tolower(organ),
+				 organ = str_replace(organ," ","_"),
+				 organ = case_when(
+				 	organ == "bladder" ~ "urinary_bladder",
+				 	organ == "pituitary" ~ "pituitary_gland",
+				 	organ == "thyroid" ~ "thyroid_gland",
+				 	TRUE ~ as.character(organ)
+				 )) %>%
+		right_join(hgFemale_key, "organ") %>% na.omit() %>% select(organ,type, colour, avg) %>%
+	rename(value = avg)
+```
+
+Let's plot the male annatogram data. You must specify `data`, `organism`, `sex`, `label`, and `title`:
+
+```{r, warning = F}
+annatogram(
+	data = male_annatogram_data,
+	organism = "human",
+	sex = "male",
+	label = "YTHDF2",
+	title = "YTHDF2 tissue expression the body"
+)
+```
+
+Let's repeat for the female annatogram data. Again you must specify `data`, `organism`, `sex`, `label`, and `title`:
+
+```{r, warning = F}
+annatogram(
+	data = female_annatogram_data,
+	organism = "human",
+	sex = "female",
+	label = "YTHDF2 gene expression",
+	title = "YTHDF2 gene expresssion on the body"
+)
+```
+
+>Challenge: Do we see different expression patterns between specific male and female tissues?
+I see a diffrence there body expression for example the female body was more thiner and apose to the make body where he looks more larger around the edges.
+>Challenge: Compare our annatogram data to our boxplot data. What are the advantages and disadvantages of plotting data each way? The advange of make annatogram is that it can show people that maybe not know the body parts off of the labeling on the bottom of the boxplot grapgh. 
+
+## Knitting
+
+Knitting is the process of running your R markdown file to create a new output. Typically this new output is more human readable and is a nice summary of your work. Before we knit, let's make a few changes to the top of our Rmd file. Let's add in authors name and today's date. Find where it says `author:` and `date:` and change these to the correct information. To knit your document, click on the ball of yarn that says `Knit` at the stop of your screen. Enjoy your nice output! 
